@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="theme-color" content="#1E40AF" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <title>StudyBase NG</title>
+  <link rel="manifest" href="manifest.json" />
+  <link rel="stylesheet" href="css/style.css?v=3" />
+  <link rel="icon" href="assets/icon.png" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://js.paystack.co/v1/inline.js"></script>
+</head>
+<body>
+  <div id="app">
+
+    <!-- AUTH -->
+    <div id="auth-screen" class="screen">
+      <div class="auth-container">
+        <div class="auth-logo">📚</div>
+        <h1>StudyBase NG</h1>
+        <p class="auth-tagline">JAMB & 100 Level CBT Practice</p>
+
+        <div class="auth-card" id="signup-card">
+          <h2>Create Account</h2>
+          <p class="auth-desc">All practice questions are free. Sign up once.</p>
+          <input type="text" id="signup-name" placeholder="Full Name" />
+          <input type="email" id="signup-email" placeholder="Email Address" />
+          <input type="tel" id="signup-phone" placeholder="Phone Number" />
+          <input type="password" id="signup-password" placeholder="Password (min 6 characters)" />
+          <div class="role-select">
+            <label><input type="radio" name="role" value="student" checked /> Student</label>
+            <label><input type="radio" name="role" value="teacher" /> Teacher</label>
+          </div>
+          <button class="primary-btn" onclick="handleSignup()">Create Account</button>
+          <p style="text-align:center;margin-top:14px;font-size:13px;color:#64748B">
+            Already have an account? <a href="#" onclick="showLogin()" style="color:#1E40AF;font-weight:600">Login</a>
+          </p>
+        </div>
+
+        <div class="auth-card hidden" id="login-card">
+          <h2>Login</h2>
+          <p class="auth-desc">Welcome back</p>
+          <input type="email" id="login-email" placeholder="Email Address" />
+          <input type="password" id="login-password" placeholder="Password" />
+          <button class="primary-btn" onclick="handleLogin()">Login</button>
+          <p style="text-align:center;margin-top:12px;font-size:13px"><a href="#" onclick="handleForgotPassword()" style="color:#1E40AF;font-weight:600">Forgot Password?</a></p>
+          <p style="text-align:center;margin-top:14px;font-size:13px;color:#64748B">
+            Don't have an account? <a href="#" onclick="showSignup()" style="color:#1E40AF;font-weight:600">Sign Up</a>
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- HOME -->
+    <div id="home-screen" class="screen">
+      <header class="header">
+        <h1>📚 StudyBase NG</h1>
+        <p class="tagline">JAMB & 100 Level CBT Practice</p>
+        <p id="welcome-user" class="welcome-user"></p>
+      </header>
+
+      <div class="welcome-card">
+        <h2>Welcome!</h2>
+        <p>All practice questions are free. Join live classes with Premium.</p>
+      </div>
+
+      <h3 class="section-title">Quick Start</h3>
+
+      <button class="action-card blue" onclick="showSubjects('jamb')">
+        <span class="emoji">📝</span>
+        <div><strong>JAMB Practice</strong><small>All subjects – Free</small></div>
+      </button>
+
+      <button class="action-card green" onclick="showSubjects('100l')">
+        <span class="emoji">🎓</span>
+        <div><strong>100 Level Courses</strong><small>GST & Foundation – Free</small></div>
+      </button>
+
+      <button class="action-card orange" onclick="showScreen('cbt-screen')">
+        <span class="emoji">⏱️</span>
+        <div><strong>Timed CBT Mode</strong><small>Simulate real exam</small></div>
+      </button>
+
+      <button class="action-card purple" onclick="showScreen('progress-screen')">
+        <span class="emoji">📊</span>
+        <div><strong>My Progress</strong><small>See your scores</small></div>
+      </button>
+
+      <button class="action-card teal" onclick="showScreen('classes-screen')">
+        <span class="emoji">👥</span>
+        <div><strong>Live Classes</strong><small>Join or create classes</small></div>
+      </button>
+
+      <button class="action-card" style="background:#059669" onclick="showPremium()">
+        <span class="emoji">⭐</span>
+        <div><strong>Go Premium</strong><small>For Live Classes only</small></div>
+      </button>
+
+      <button class="action-card" style="background:#7C3AED" onclick="showScreen('help-screen')">
+        <span class="emoji">❓</span>
+        <div><strong>Help Center</strong><small>FAQs & Support</small></div>
+      </button>
+    </div>
+
+    <!-- SUBJECTS -->
+    <div id="subjects-screen" class="screen">
+      <div class="top-bar">
+        <button class="back-btn" onclick="showScreen('home-screen')">← Back</button>
+        <h2 id="subjects-title">Select Subject</h2>
+      </div>
+      <div id="subjects-list" class="list"></div>
+    </div>
+
+    <!-- QUIZ -->
+    <div id="quiz-screen" class="screen">
+      <div class="top-bar">
+        <button class="back-btn" onclick="exitQuiz()">← Exit</button>
+        <div id="quiz-progress">Question 1 of 10</div>
+        <div id="quiz-timer" class="timer hidden">⏱ 10:00</div>
+      </div>
+      <div class="progress-bar-bg"><div id="progress-fill" class="progress-bar-fill"></div></div>
+      <div class="quiz-content">
+        <p id="quiz-subject" class="quiz-subject"></p>
+        <h2 id="quiz-question" class="quiz-question"></h2>
+        <div id="options-container"></div>
+        <div id="explanation-box" class="explanation-box hidden"></div>
+      </div>
+      <div id="quiz-footer" class="quiz-footer hidden">
+        <button id="next-btn" class="primary-btn" onclick="nextQuestion()">Next Question</button>
+      </div>
+    </div>
+
+    <!-- RESULT -->
+    <div id="result-screen" class="screen">
+      <div class="result-container">
+        <h2>Quiz Completed!</h2>
+        <div id="final-score" class="final-score">0 / 0</div>
+        <div id="final-percent" class="final-percent">0%</div>
+        <div class="result-card"><small>Subject</small><strong id="result-subject"></strong></div>
+        <button class="primary-btn" onclick="restartQuiz()">Try Again</button>
+        <button class="secondary-btn" onclick="showScreen('home-screen')">Back to Home</button>
+      </div>
+    </div>
+
+    <!-- CBT -->
+    <div id="cbt-screen" class="screen">
+      <div class="top-bar">
+        <button class="back-btn" onclick="showScreen('home-screen')">← Back</button>
+        <h2>Timed CBT Mode</h2>
+      </div>
+      <div class="info-box">
+        <strong>📌 How it works</strong>
+        <p>• Limited time for the whole set</p>
+        <p>• Answers lock after selection</p>
+        <p>• Score shown only at the end</p>
+      </div>
+      <h3 class="section-title">JAMB Subjects</h3>
+      <div id="cbt-jamb-list" class="list"></div>
+      <h3 class="section-title">100 Level Courses</h3>
+      <div id="cbt-100l-list" class="list"></div>
+    </div>
+
+    <!-- PROGRESS -->
+    <div id="progress-screen" class="screen">
+      <div class="top-bar">
+        <button class="back-btn" onclick="showScreen('home-screen')">← Back</button>
+        <h2>My Progress</h2>
+      </div>
+      <div class="summary-card">
+        <div class="stat"><div class="stat-number" id="total-quizzes">0</div><div class="stat-label">Quizzes Taken</div></div>
+        <div class="stat"><div class="stat-number" id="avg-score">0%</div><div class="stat-label">Average Score</div></div>
+      </div>
+      <h3 class="section-title">Subject Performance</h3>
+      <div id="progress-list" class="list"></div>
+      <div class="note">💡 Your scores are saved on this phone.</div>
+    </div>
+
+    <!-- CLASSES -->
+    <div id="classes-screen" class="screen">
+      <div class="top-bar">
+        <button class="back-btn" onclick="showScreen('home-screen')">← Back</button>
+        <h2>Live Classes</h2>
+      </div>
+      <div class="card">
+        <h3>Join a Class</h3>
+        <p class="card-desc">Enter the invite code from your teacher</p>
+        <input type="text" id="invite-code" placeholder="e.g. SB7X9K2" maxlength="12" />
+        <button class="primary-btn" onclick="joinClass()">Join Class</button>
+      </div>
+      <button class="create-btn" onclick="createClass()">+ Create New Class (Teacher)</button>
+      <h3 class="section-title">My Classes</h3>
+      <div id="my-classes" class="list"></div>
+    </div>
+
+    <!-- PREMIUM -->
+    <div id="premium-screen" class="screen">
+      <div class="top-bar">
+        <button class="back-btn" onclick="showScreen('home-screen')">← Back</button>
+        <h2>Go Premium</h2>
+      </div>
+      <div class="card" style="text-align:center">
+        <h3 style="margin-bottom:8px">⭐ Unlock Live Classes</h3>
+        <p style="color:#64748B;margin-bottom:16px">All practice questions are free. Premium is only for Live Classes.</p>
+        
+        <div style="background:#F0FDF4;padding:16px;border-radius:12px;margin-bottom:16px">
+          <p style="font-size:14px;margin-bottom:6px"><strong>Student Plan</strong></p>
+          <p style="font-size:24px;font-weight:800;color:#059669">₦3,500<span style="font-size:14px;font-weight:500"> / month</span></p>
+          <p style="font-size:12px;color:#64748B">Join teacher classes</p>
+        </div>
+
+        <div style="background:#EFF6FF;padding:16px;border-radius:12px;margin-bottom:20px">
+          <p style="font-size:14px;margin-bottom:6px"><strong>Teacher Plan</strong></p>
+          <p style="font-size:24px;font-weight:800;color:#1E40AF">₦15,000<span style="font-size:14px;font-weight:500"> / month</span></p>
+          <p style="font-size:12px;color:#64748B">Create classes + daily codes</p>
+        </div>
+
+        <button class="primary-btn" onclick="startPayment('student')">Pay ₦3,500 (Student)</button>
+        <button class="primary-btn" style="background:#1E40AF;margin-top:10px" onclick="startPayment('teacher')">Pay ₦15,000 (Teacher)</button>
+        <p style="font-size:12px;color:#94A3B8;margin-top:16px">Payment powered by Paystack. Secure.</p>
+      </div>
+    </div>
+
+  </div>
+
+  
+    <!-- HELP CENTER -->
+    <div id="help-screen" class="screen">
+      <div class="top-bar">
+        <button class="back-btn" onclick="showScreen('home-screen')">← Back</button>
+        <h2>Help Center</h2>
+      </div>
+
+      <div style="padding:16px">
+        <h3 style="margin-bottom:12px;color:#1E293B">Frequently Asked Questions</h3>
+
+        <div class="faq-item" style="background:#F8FAFC;border-radius:12px;padding:14px;margin-bottom:10px">
+          <strong style="color:#1E40AF">How do I reset my password?</strong>
+          <p style="margin:6px 0 0;font-size:14px;color:#475569">On the Login page, enter your email and tap <b>Forgot Password?</b>. Check your email (and Spam folder) for the reset link.</p>
+        </div>
+
+        <div class="faq-item" style="background:#F8FAFC;border-radius:12px;padding:14px;margin-bottom:10px">
+          <strong style="color:#1E40AF">All practice questions are free?</strong>
+          <p style="margin:6px 0 0;font-size:14px;color:#475569">Yes. All JAMB and 100 Level practice questions are completely free. Premium is only required for Live Classes.</p>
+        </div>
+
+        <div class="faq-item" style="background:#F8FAFC;border-radius:12px;padding:14px;margin-bottom:10px">
+          <strong style="color:#1E40AF">How do I join a Live Class?</strong>
+          <p style="margin:6px 0 0;font-size:14px;color:#475569">Go to Live Classes → enter the invite code from your teacher. You need Premium (Student plan) to join.</p>
+        </div>
+
+        <div class="faq-item" style="background:#F8FAFC;border-radius:12px;padding:14px;margin-bottom:10px">
+          <strong style="color:#1E40AF">Payment successful but still not Premium?</strong>
+          <p style="margin:6px 0 0;font-size:14px;color:#475569">Sometimes it takes a few minutes. Close the app completely and open it again. If it still does not work, contact support with your payment receipt.</p>
+        </div>
+
+        <div class="faq-item" style="background:#F8FAFC;border-radius:12px;padding:14px;margin-bottom:10px">
+          <strong style="color:#1E40AF">How many questions can I practice?</strong>
+          <p style="margin:6px 0 0;font-size:14px;color:#475569">You can choose 10, 20, 30 or 50 questions per session in Timed CBT Mode. All subjects have many questions.</p>
+        </div>
+
+        <div class="faq-item" style="background:#F8FAFC;border-radius:12px;padding:14px;margin-bottom:18px">
+          <strong style="color:#1E40AF">Can I use the app offline?</strong>
+          <p style="margin:6px 0 0;font-size:14px;color:#475569">Yes, after the questions load once, you can practice offline. Progress is saved on your phone.</p>
+        </div>
+
+        <h3 style="margin:20px 0 12px;color:#1E293B">Contact Support</h3>
+        <p style="font-size:14px;color:#64748B;margin-bottom:14px">Having a problem? Reach us directly:</p>
+
+        <a href="https://wa.me/2347049846647" target="_blank" style="display:block;background:#25D366;color:white;text-align:center;padding:14px;border-radius:12px;font-weight:600;margin-bottom:10px;text-decoration:none">
+          💬 Chat on WhatsApp
+        </a>
+
+        <a href="mailto:dynastyempire6@gmail.com?subject=StudyBase NG Support" style="display:block;background:#1E40AF;color:white;text-align:center;padding:14px;border-radius:12px;font-weight:600;margin-bottom:10px;text-decoration:none">
+          ✉️ Email Support
+        </a>
+
+        <p style="text-align:center;font-size:13px;color:#94A3B8;margin-top:16px">
+          Official Support<br>
+          dynastyempire6@gmail.com<br>
+          WhatsApp: 07049846647
+        </p>
+      </div>
+    </div>
+
+  <nav id="bottom-nav" class="bottom-nav hidden">
+    <button class="nav-item active" onclick="showScreen('home-screen')"><span>🏠</span><small>Home</small></button>
+    <button class="nav-item" onclick="showScreen('cbt-screen')"><span>⏱️</span><small>CBT</small></button>
+    <button class="nav-item" onclick="showScreen('progress-screen')"><span>📊</span><small>Progress</small></button>
+    <button class="nav-item" onclick="showScreen('classes-screen')"><span>👥</span><small>Classes</small></button>
+  </nav>
+
+  <script src="js/supabase-config.js?v=3"></script>
+  <script src="js/questions.js?v=3"></script>
+  <script src="js/app.js?v=3"></script>
+  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/sw.js').catch(() => {});
+    }
+  </script>
+</body>
+</html>
